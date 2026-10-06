@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>識字比賽播放系統 - 臺灣標準標楷體版</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="default">
+
+  <!-- 頂部導覽控制列 (常駐/全螢幕自動隱藏) -->
+  <header class="top-navbar" id="topNavbar">
+    <div class="brand-section">
+      <span class="brand-title" id="navTitle">2026 TACSFL 識字比賽</span>
+      <span class="level-badge" id="navLevelBadge">第一級 (Level 1)</span>
+    </div>
+
+    <div class="nav-controls">
+      <!-- 快捷秒數調校組 -->
+      <div class="speed-stepper" title="調整每個詞彙顯示秒數">
+        <button type="button" class="stepper-btn" id="navSpeedMinus" title="減少 0.5 秒">-0.5s</button>
+        <span class="stepper-val" id="navSpeedVal">2.5 秒</span>
+        <button type="button" class="stepper-btn" id="navSpeedPlus" title="增加 0.5 秒">+0.5s</button>
+      </div>
+
+      <!-- 隨機抽題切換 -->
+      <button type="button" class="nav-btn" id="navRandomToggle" title="切換題目隨機/循序出題">
+        <span id="navRandomIcon">🔀</span> <span id="navRandomText">隨機中</span>
+      </button>
+
+      <!-- 提示音效開關 -->
+      <button type="button" class="nav-btn" id="navSoundToggle" title="開啟或關閉翻頁/倒數音效">
+        <span id="navSoundIcon">🔊</span>
+      </button>
+
+      <!-- 全螢幕切換 -->
+      <button type="button" class="nav-btn" id="navFullscreenBtn" title="全螢幕模式 (快捷鍵: F)">
+        <span>⛶</span> 全螢幕
+      </button>
+
+      <!-- 題庫與比賽設定按鈕 -->
+      <button type="button" class="nav-btn primary" id="openSettingsBtn" title="開啟比賽標題與題庫設定">
+        <span>⚙️</span> 設定與題庫
+      </button>
+    </div>
+  </header>
+
+  <!-- 主應用容器 -->
+  <main class="app-container">
+
+    <!-- 1. 比賽封面頁面 (Cover Screen) 解決提早洩題問題 -->
+    <section class="view-section active" id="coverView">
+      <div class="cover-card">
+        <div class="cover-badge-top" id="coverBadgeYear">識字比賽展示系統</div>
+        <h1 class="cover-title" id="coverDisplayTitle">2026 TACSFL 識字比賽</h1>
+        <p class="cover-subtitle" id="coverDisplaySubtitle">線上螢幕分享播放專用 ‧ 臺灣教育部標準標楷體</p>
+
+        <div class="cover-config-grid">
+          <!-- 級別選擇 -->
+          <div class="config-item">
+            <label for="coverLevelSelect">競賽級別 / 組別：</label>
+            <select id="coverLevelSelect" class="form-control"></select>
+          </div>
+
+          <!-- 參賽選手姓名 (選填) -->
+          <div class="config-item">
+            <label for="coverStudentName">參賽學生姓名 / 編號（選填）：</label>
+            <input type="text" id="coverStudentName" class="form-control" placeholder="例：林小美 或 第 01 號">
+          </div>
+
+          <!-- 本級抽考題數設定 (預設 50 題，避免過多題耗時過久) -->
+          <div class="config-item">
+            <label for="coverWordLimitInput">抽考題數：</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input type="number" id="coverWordLimitInput" class="form-control" min="1" max="500" value="50" style="width: 85px;">
+              <label class="checkbox-label" style="font-size: 0.85rem; margin: 0; white-space: nowrap;">
+                <input type="checkbox" id="coverAllWordsCheck">
+                <span>考全部</span>
+              </label>
+            </div>
+            <div id="coverWordCountText" style="font-size: 0.8rem; color: #2b6cb0; font-weight: 600; margin-top: 2px;">題庫共 50 題，抽考 50 題</div>
+          </div>
+
+          <!-- 播放間距秒數 -->
+          <div class="config-item">
+            <label for="coverSpeedInput">每題顯示時間（秒）：</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input type="number" id="coverSpeedInput" class="form-control" min="0.5" max="10" step="0.1" value="2.5" style="width: 100px;">
+              <span style="font-size: 0.9rem; color: #718096;">秒 / 詞彙</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="cover-options">
+          <label class="checkbox-label" title="開始比賽前會有 3, 2, 1 倒數緩衝動畫">
+            <input type="checkbox" id="coverCountdownCheck" checked>
+            <span>開始前進行 3 秒倒數準備</span>
+          </label>
+          <label class="checkbox-label" title="打亂詞彙順序，避免學生背誦題號">
+            <input type="checkbox" id="coverShuffleCheck" checked>
+            <span>題目隨機順序出題</span>
+          </label>
+        </div>
+
+        <button type="button" class="btn-start-competition" id="startCompetitionBtn">
+          <span>▶</span> 開始比賽
+        </button>
+
+        <div class="cover-shortcuts-tip">
+          <span>操作提示：按 <kbd>空白鍵</kbd> 暫停/繼續</span>
+          <span><kbd>→</kbd> 下一題</span>
+          <span><kbd>←</kbd> 上一題</span>
+          <span><kbd>F</kbd> 全螢幕</span>
+          <span><kbd>Esc</kbd> 返回封面</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 倒數準備頁面 (Countdown Screen) -->
+    <section class="view-section" id="countdownView">
+      <div class="countdown-content">
+        <div class="countdown-number" id="countdownNum">3</div>
+        <div class="countdown-label" id="countdownLabel">準備開始...</div>
+      </div>
+    </section>
+
+    <!-- 3. 詞彙播放畫面 (Play Screen) -->
+    <section class="view-section" id="playView">
+      <!-- 頂部資訊列 -->
+      <div class="play-header" id="playHeader">
+        <div class="player-info">
+          <span class="player-name-badge" id="playStudentBadge" style="display: none;">林小美</span>
+          <span class="level-badge" id="playLevelBadge">第一級 (Level 1)</span>
+          <span class="word-counter-badge" id="playCounter">第 1 / 50 題</span>
+        </div>
+
+        <div class="play-quick-tools">
+          <button type="button" class="nav-btn" id="playExitBtn" title="返回封面 (快捷鍵: Esc)">
+            <span>✕</span> 返回封面
+          </button>
+        </div>
+      </div>
+
+      <!-- 中央超大詞彙展示舞台 (白底黑字標準標楷體) -->
+      <div class="word-display-stage" id="wordStage">
+        <div class="word-text" id="activeWordText">星期二</div>
+        <div class="pause-indicator" id="pauseIndicator">⏸ 暫停中</div>
+      </div>
+
+      <!-- 倒數計時進度條 -->
+      <div class="timer-bar-container" id="timerBarContainer">
+        <div class="timer-bar-fill" id="timerBarFill"></div>
+      </div>
+
+      <!-- 底部播放浮動控制列 (全螢幕閒置時自動隱藏) -->
+      <div class="play-control-bar" id="playControlBar">
+        <button type="button" class="ctrl-btn" id="btnPrevWord" title="上一題 (快捷鍵: ←)">
+          ⏮
+        </button>
+        <button type="button" class="ctrl-btn play-toggle" id="btnPlayPause" title="暫停/繼續 (快捷鍵: 空白鍵)">
+          ⏸
+        </button>
+        <button type="button" class="ctrl-btn" id="btnNextWord" title="下一題 (快捷鍵: →)">
+          ⏭
+        </button>
+        <button type="button" class="ctrl-btn" id="btnReplayWord" title="重播本題秒數 (快捷鍵: R)">
+          🔄
+        </button>
+
+        <div style="width: 1px; height: 24px; background: var(--border-color); margin: 0 4px;"></div>
+
+        <!-- 即時秒數微調 -->
+        <div class="speed-stepper" style="background: transparent; border: none;">
+          <button type="button" class="stepper-btn" id="playSpeedMinus" title="每題減少 0.5 秒">-0.5s</button>
+          <span class="stepper-val" id="playSpeedVal">2.5s</span>
+          <button type="button" class="stepper-btn" id="playSpeedPlus" title="每題增加 0.5 秒">+0.5s</button>
+        </div>
+
+        <button type="button" class="ctrl-btn" id="btnPlayFullscreen" title="切換全螢幕 (快捷鍵: F)">
+          ⛶
+        </button>
+      </div>
+    </section>
+
+    <!-- 4. 比賽結束完成頁面 (Result Screen) -->
+    <section class="view-section" id="resultView">
+      <div class="result-card">
+        <div class="result-icon">🎉</div>
+        <h2 class="result-title">比賽圓滿結束！</h2>
+        <p id="resultPlayerText" style="font-size: 1.1rem; color: #4a5568; margin-top: 4px;">表現非常優秀！</p>
+
+        <div class="result-stat-box">
+          <div class="stat-item">
+            <h4>挑戰級別</h4>
+            <p id="resultLevelText" style="font-size: 1.25rem;">Level 1</p>
+          </div>
+          <div class="stat-item">
+            <h4>完成詞彙數</h4>
+            <p id="resultTotalWords">50 題</p>
+          </div>
+          <div class="stat-item">
+            <h4>總作答時間</h4>
+            <p id="resultTotalTime">02:05</p>
+          </div>
+        </div>
+
+        <div class="result-actions">
+          <button type="button" id="btnRestartSamePlayer" style="background: var(--card-bg);">
+            🔄 重新播放此組
+          </button>
+          <button type="button" class="primary" id="btnNextStudent" style="background: var(--primary-color); color: #fff;">
+            👤 下一位選手（返回封面）
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= 設定與題庫管理視窗 (Settings Modal) ================= -->
+  <div class="modal-backdrop" id="settingsModal">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>⚙️</span> 比賽系統設定與題庫管理
+        </div>
+        <button type="button" class="modal-close-btn" id="closeSettingsBtn" title="關閉視窗">✕</button>
+      </div>
+
+      <div class="modal-tabs">
+        <button type="button" class="tab-btn active" data-tab="tab-general">比賽設定</button>
+        <button type="button" class="tab-btn" data-tab="tab-bank">題庫詞彙管理</button>
+        <button type="button" class="tab-btn" data-tab="tab-font">字型與排版</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- 分頁 1：基本設定 -->
+        <div class="tab-pane active" id="tab-general">
+          <div class="form-group">
+            <label for="cfgCompetitionTitle">比賽名稱 / 標題：</label>
+            <input type="text" id="cfgCompetitionTitle" class="form-control" value="2026 TACSFL 識字比賽">
+            <span class="hint">封面頁與導覽列將即時顯示此標題。</span>
+          </div>
+
+          <div class="form-group">
+            <label for="cfgCompetitionSubtitle">主辦單位 / 比賽副標題：</label>
+            <input type="text" id="cfgCompetitionSubtitle" class="form-control" value="線上螢幕分享播放專用 ‧ 臺灣教育部標準標楷體">
+          </div>
+
+          <!-- 抽考題數設定 (特別針對 Level 3/4 等大題庫) -->
+          <div class="form-group">
+            <label for="cfgLimitCountInput">預設抽考題數：</label>
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <input type="number" id="cfgLimitCountInput" class="form-control" min="1" max="500" value="50" style="width: 100px;">
+              <label class="checkbox-label">
+                <input type="checkbox" id="cfgEnableLimitCheck" checked>
+                <span>啟用抽考題數限制（未勾選則出題整個題庫）</span>
+              </label>
+            </div>
+            <span class="hint">💡 針對 Level 3 與 Level 4 詞彙量較多之級別，預設抽考 50 題，有效控制每位選手比賽時間；若題庫少於設定題數則自動考完全部。</span>
+          </div>
+
+          <div class="form-group">
+            <label>畫面色彩主題：</label>
+            <select id="cfgThemeSelect" class="form-control">
+              <option value="default">比賽標準（白底黑字，最清晰乾淨）</option>
+              <option value="soft">溫和護眼（米紙白底深灰字）</option>
+              <option value="dark">沉浸深色（深黑底純白字）</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>顯示選項：</label>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label class="checkbox-label">
+                <input type="checkbox" id="cfgShowTimerBar" checked>
+                <span>詞彙下方顯示剩餘秒數計時進度條</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="cfgEnableSounds" checked>
+                <span>開啟翻頁與倒數提示音</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 分頁 2：題庫管理 (徹底解決痛點 4) -->
+        <div class="tab-pane" id="tab-bank">
+          <div class="bank-toolbar">
+            <div class="bank-selector-group">
+              <label for="bankLevelSelect" style="font-weight: 600;">選擇級別：</label>
+              <select id="bankLevelSelect" class="form-control" style="min-width: 180px;"></select>
+              <button type="button" class="nav-btn" id="btnAddNewLevel" title="新增一個自訂級別">➕ 新增級別</button>
+              <button type="button" class="nav-btn" id="btnDeleteLevel" title="刪除當前自訂級別" style="color: #c53030;">🗑️ 刪除此級別</button>
+            </div>
+            
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="nav-btn" id="btnCleanBankFormat" title="自動清除空行、空白字元與整理格式">🧹 自動整理格式</button>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label for="bankLevelNameInput">級別顯示名稱：</label>
+              <input type="text" id="bankLevelNameInput" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="bankDefaultSecondsInput">此級別預設顯示秒數：</label>
+              <input type="number" id="bankDefaultSecondsInput" class="form-control" min="0.5" max="10" step="0.1" value="2.5">
+              <span class="hint">例如：Level 1 為 2.5 秒、Level 2/3 為 2.0 秒、Level 4 為 1.5 秒</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label for="bankWordsTextarea">題目詞彙清單（每行一個詞彙）：</label>
+              <span id="bankWordStats" style="font-size: 0.85rem; color: #2b6cb0; font-weight: 600;">目前共 50 題</span>
+            </div>
+            <textarea id="bankWordsTextarea" class="form-control" rows="10" placeholder="請在此輸入或貼上題目，每一行一個詞彙...&#10;例：&#10;學校&#10;老師&#10;同學"></textarea>
+            <span class="hint">註：所有詞彙將嚴格使用臺灣正體中文呈現。</span>
+          </div>
+        </div>
+
+        <!-- 分頁 3：字型與排版 (徹底解決痛點 2：美國電腦顯示字型問題) -->
+        <div class="tab-pane" id="tab-font">
+          <div class="form-group">
+            <label for="cfgFontFamilySelect">詞彙字型選擇：</label>
+            <select id="cfgFontFamilySelect" class="form-control">
+              <option value="iansui">⭐ 推薦：臺灣標準標楷體 (開源芫荽楷書 WebFont，任何美國電腦皆保證正確)</option>
+              <option value="system-kai">💻 系統內建標楷體 (DFKai-SB / BiauKai / 楷體-繁)</option>
+              <option value="custom">📁 使用本機載入之字型檔 (.ttf / .otf)</option>
+              <option value="heiti">🔤 臺灣微軟正黑體 / 黑體 (Sans-Serif)</option>
+              <option value="songti">🔤 臺灣新細明體 / 宋體 (Serif)</option>
+            </select>
+            <span class="hint">預設採用符合臺灣教育部國字標準字體規範之正體楷書，解決美國電腦缺字或顯示非標準字型的問題。</span>
+          </div>
+
+          <!-- 自訂字型上傳區 (可離線使用) -->
+          <div class="custom-font-box" id="dropFontBox">
+            <div style="font-size: 1.5rem; margin-bottom: 6px;">📂</div>
+            <div style="font-weight: 600; margin-bottom: 4px;">載入本地楷體字型檔案（選用，支援離線環境）</div>
+            <div style="font-size: 0.85rem; color: #718096; margin-bottom: 12px;">若電腦處於完全無網路環境，可直接選取電腦中的 .ttf / .otf / .woff2 楷體檔</div>
+            <input type="file" id="fontFileInput" accept=".ttf,.otf,.woff,.woff2" style="display: none;">
+            <button type="button" class="nav-btn" onclick="document.getElementById('fontFileInput').click()">選擇電腦字型檔案</button>
+            <div id="loadedFontNameText" style="margin-top: 8px; font-size: 0.85rem; color: #38a169; font-weight: 600;"></div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label for="cfgFontSizeRange">字體大小縮放：<span id="cfgFontSizeLabel">100%</span></label>
+              <input type="range" id="cfgFontSizeRange" min="80" max="140" step="5" value="100">
+              <span class="hint">在不同解析度的投影螢幕或分享視窗中微調字體大小。</span>
+            </div>
+
+            <div class="form-group">
+              <label for="cfgFontWeightSelect">字體筆畫粗細：</label>
+              <select id="cfgFontWeightSelect" class="form-control">
+                <option value="500">標準筆畫 (Medium)</option>
+                <option value="600" selected>清晰加粗 (SemiBold，推薦視訊分享)</option>
+                <option value="700">特粗筆畫 (Bold)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 字型效果即時預覽 -->
+          <div class="form-group">
+            <label>字型即時預覽：</label>
+            <div id="fontPreviewBox" style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; text-align: center; font-size: 3.5rem; font-family: var(--font-kai); font-weight: var(--font-weight-custom);">
+              文字 學校 繁體 標楷
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div class="modal-footer-left">
+          <button type="button" class="nav-btn" id="btnExportBankJson" title="將所有題庫與設定匯出為 JSON 備份檔">📤 匯出題庫備份</button>
+          <button type="button" class="nav-btn" id="btnImportBankJson" title="從 JSON 檔案匯入題庫">📥 匯入題庫檔案</button>
+          <input type="file" id="importJsonFileInput" accept=".json" style="display: none;">
+          <button type="button" class="nav-btn" id="btnResetDefaultBank" title="恢復成內建 2024 年官方題庫" style="color: #718096;">🔄 恢復官方預設</button>
+        </div>
+
+        <div class="modal-footer-right">
+          <button type="button" class="nav-btn primary" id="btnSaveSettings">💾 儲存並套用</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 浮動訊息 Toast -->
+  <div class="toast-msg" id="toastMsg">設定已儲存</div>
+
+  <!-- 載入官方預設題庫資料 (含 2024 Level 1 ~ 4，共 465 題) -->
+  <script src="default_bank.js"></script>
+  <!-- 核心主程式邏輯 -->
+  <script src="app.js"></script>
+</body>
+</html>
